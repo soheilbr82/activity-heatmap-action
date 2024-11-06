@@ -35,7 +35,7 @@ permissions:
   issues: write
   pull-requests: write
 
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -80,14 +80,25 @@ jobs:
 
 ## **Inputs**
 
+| Name         | Description                         | Required | Default |
+|--------------|-------------------------------------|----------|---------|
+| `threshold`  | Activity threshold for hotspots     | No       | `10`    |
+| `time_range` | Time range for analysis in days     | No       | `30`    |
 
 
 ## **Outputs**
 
 
+| Name          | Description                          |
+|---------------|--------------------------------------|
+| `heatmap_svg` | SVG content of the generated heatmap |
+
 ## **Environment Variables**
 
 
+| Name           | Description                               |
+|----------------|-------------------------------------------|
+| `GITHUB_TOKEN` | GitHub token with appropriate permissions |
 
 ## **Setup and Configuration**
 
