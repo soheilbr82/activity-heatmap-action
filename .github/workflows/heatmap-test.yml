@@ -18,7 +18,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
       - name: Run Project Heatmap Action
         id: heatmap
@@ -33,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: heatmap
-          path: heatmap.svg
+          path: dist/heatmap.svg
 
       - name: Post Heatmap Comment
         if: ${{ github.event_name == 'pull_request' }}
@@ -41,12 +42,14 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const svgContent = steps.heatmap.outputs.heatmap_svg;
+            const svgContent = process.env.HEATMAP_SVG;
             if (svgContent) {
               const issueNumber = context.issue.number;
               await github.rest.issues.createComment({
                 ...context.repo,
                 issue_number: issueNumber,
-                body: `### Project Heatmap\n![Heatmap](data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')})`,
+                body: `### Project Heatmap\n![Heatmap](data:image/svg+xml;base64,${svgContent})`,
               });
             }
+        env:
+          HEATMAP_SVG: ${{ steps.heatmap.outputs.heatmap_svg }}

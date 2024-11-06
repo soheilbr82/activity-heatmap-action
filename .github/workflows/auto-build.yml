@@ -1,0 +1,43 @@
+name: 'Build and Commit Action'
+
+on:
+  push:
+    paths:
+      - 'index.js'
+      - 'fetchRepoData.js'
+      - 'analyzeData.js'
+      - 'generateHeatmap.js'
+      - 'postComment.js'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Action
+        run: npm run build
+
+      - name: Commit and Push Dist
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add dist/
+          git commit -m "Update dist/index.js" || echo "No changes to commit"
+          git push origin main
