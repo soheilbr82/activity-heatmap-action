@@ -19,7 +19,10 @@ A GitHub Action that analyzes a repository to generate a heatmap based on:
 
 To use this action, include it in your workflow file.
 
+
+
 ## **Basic Example**
+
 
 ```yml
 name: Generate Project Heatmap
@@ -34,7 +37,6 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-
 
 jobs:
   build:

@@ -4,23 +4,19 @@ const d3 = require('d3');
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
-function generateHeatmap(fileStats) {
-  // Prepare data
-  const data = Object.entries(fileStats).map(([filename, stats]) => ({
-    filename,
-    changes: stats.changes,
-    contributors: stats.contributors,
-  }));
-
-  // Sort data based on changes
-  data.sort((a, b) => b.changes - a.changes);
-
-  // Set up SVG dimensions
+/**
+ * Generates an SVG heatmap based on the provided file statistics.
+ *
+ * @param {Object} data - An object where keys are filenames and values are stats (e.g., changes).
+ * @returns {string} - Serialized SVG content as a string.
+ */
+function generateHeatmap(data) {
   const width = 800;
-  const height = data.length * 20 + 100; // Adjust height based on data length
+  const height = 600;
+  const margin = { top: 50, right: 50, bottom: 50, left: 200 };
 
-  // Create a virtual DOM for D3 to use
-  const dom = new JSDOM(`<html><body></body></html>`);
+  // Create a virtual DOM
+  const dom = new JSDOM(`<!DOCTYPE html><body></body>`);
   const body = d3.select(dom.window.document).select('body');
 
   const svg = body
@@ -28,66 +24,65 @@ function generateHeatmap(fileStats) {
     .attr('width', width)
     .attr('height', height);
 
-  // Define scales
-  const xScale = d3
-    .scaleLinear()
-    .domain([0, d3.max(data, (d) => d.changes)])
-    .range([0, width - 200]);
+  // Prepare data
+  const files = Object.keys(data);
+  const changes = files.map(d => data[d].changes);
 
-  const yScale = d3
-    .scaleBand()
-    .domain(data.map((d) => d.filename))
-    .range([50, height - 50])
+  // Define scales
+  const xScale = d3.scaleLinear()
+    .domain([0, d3.max(changes)])
+    .range([margin.left, width - margin.right]);
+
+  const yScale = d3.scaleBand()
+    .domain(files)
+    .range([margin.top, height - margin.bottom])
     .padding(0.1);
 
   // Create bars
-  svg
-    .selectAll('.bar')
-    .data(data)
+  svg.selectAll('.bar')
+    .data(files)
     .enter()
     .append('rect')
-    .attr('x', 200)
-    .attr('y', (d) => yScale(d.filename))
-    .attr('width', (d) => xScale(d.changes))
+    .attr('x', xScale(0))
+    .attr('y', d => yScale(d))
+    .attr('width', d => xScale(data[d].changes) - xScale(0))
     .attr('height', yScale.bandwidth())
     .attr('fill', 'steelblue');
 
   // Add file names
-  svg
-    .selectAll('.label')
-    .data(data)
+  svg.selectAll('.label')
+    .data(files)
     .enter()
     .append('text')
-    .attr('x', 195)
-    .attr('y', (d) => yScale(d.filename) + yScale.bandwidth() / 2)
+    .attr('x', margin.left - 10)
+    .attr('y', d => yScale(d) + yScale.bandwidth() / 2)
     .attr('dy', '.35em')
     .attr('text-anchor', 'end')
-    .text((d) => d.filename)
+    .text(d => d)
     .attr('font-size', '10px');
 
   // Add changes labels
-  svg
-    .selectAll('.value')
-    .data(data)
+  svg.selectAll('.value')
+    .data(files)
     .enter()
     .append('text')
-    .attr('x', (d) => 200 + xScale(d.changes) + 5)
-    .attr('y', (d) => yScale(d.filename) + yScale.bandwidth() / 2)
+    .attr('x', d => xScale(data[d].changes) + 5)
+    .attr('y', d => yScale(d) + yScale.bandwidth() / 2)
     .attr('dy', '.35em')
-    .text((d) => d.changes)
+    .text(d => data[d].changes)
     .attr('font-size', '10px');
 
   // Add title
-  svg
-    .append('text')
+  svg.append('text')
     .attr('x', width / 2)
-    .attr('y', 25)
+    .attr('y', margin.top / 2)
     .attr('text-anchor', 'middle')
     .text('Project Heatmap')
     .attr('font-size', '16px')
     .attr('font-weight', 'bold');
 
-  return dom.window.document.querySelector('svg').outerHTML;
+  // Serialize SVG
+  return body.select('svg').node().outerHTML;
 }
 
 module.exports = generateHeatmap;

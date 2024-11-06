@@ -1,5 +1,3 @@
-# action.yml
-
 name: 'Customizable Project Heatmap'
 description: 'Generates a heatmap of project hotspots based on activity, contributors, and complexity.'
 inputs:
