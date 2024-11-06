@@ -1,0 +1,22 @@
+# action.yml
+
+name: 'Customizable Project Heatmap'
+description: 'Generates a heatmap of project hotspots based on activity, contributors, and complexity.'
+inputs:
+  threshold:
+    description: 'Activity threshold for hotspots'
+    required: false
+    default: '10'
+  time_range:
+    description: 'Time range for analysis (in days)'
+    required: false
+    default: '30'
+outputs:
+  heatmap_svg:
+    description: 'SVG content of the generated heatmap'
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'shield'
+  color: 'green'
