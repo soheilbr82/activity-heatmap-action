@@ -1,0 +1,52 @@
+name: 'Test Project Heatmap Action'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Project Heatmap Action
+        id: heatmap
+        uses: ./
+        with:
+          threshold: '5'
+          time_range: '14'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Heatmap Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: heatmap
+          path: heatmap.svg
+
+      - name: Post Heatmap Comment
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const svgContent = steps.heatmap.outputs.heatmap_svg;
+            if (svgContent) {
+              const issueNumber = context.issue.number;
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: issueNumber,
+                body: `### Project Heatmap\n![Heatmap](data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')})`,
+              });
+            }
