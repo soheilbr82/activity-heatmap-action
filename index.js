@@ -5,7 +5,6 @@ const github = require('@actions/github');
 const fetchRepoData = require('./fetchRepoData');
 const analyzeData = require('./analyzeData');
 const generateHeatmap = require('./generateHeatmap');
-const postComment = require('./postComment');
 
 (async () => {
   try {
@@ -43,6 +42,9 @@ const postComment = require('./postComment');
     // Generate the heatmap SVG content
     const svgContent = generateHeatmap(filteredStats);
 
+    // Debug: Log the SVG content
+    console.log(`Generated SVG Content: ${svgContent}`);
+
     // Encode SVG content to Base64
     const svgBase64 = Buffer.from(svgContent).toString('base64');
 
@@ -52,7 +54,11 @@ const postComment = require('./postComment');
     // If the action is running in the context of a pull request, post the heatmap as a comment
     if (github.context.payload.pull_request) {
       const issue_number = github.context.payload.pull_request.number;
-      await postComment(octokit, owner, repo, issue_number, svgBase64);
+      await github.rest.issues.createComment({
+        ...github.context.repo,
+        issue_number: issue_number,
+        body: `### Project Heatmap\n![Heatmap](data:image/svg+xml;base64,${svgBase64})`,
+      });
     }
   } catch (error) {
     core.setFailed(error.message);
